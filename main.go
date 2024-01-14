@@ -4,12 +4,21 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 func connectDB() (*sql.DB, error) {
-	db, err := sql.Open("postgres", "user=postgres password=postgres dbname=testdb host=localhost port=5432")
+	dbName := os.Getenv("DATABASE")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+
+	dbString := fmt.Sprintf("user=%v password=%v dbname=%v host=%v port=%v", dbUser, dbPassword, dbName, dbHost, dbPort)
+	db, err := sql.Open("postgres", dbString)
 	if err != nil {
 		return nil, err
 	}
@@ -23,7 +32,6 @@ type User struct {
 }
 
 func (u User) String() string {
-	// Better use Env Variables
 	return fmt.Sprintf("{UserId:%2v | UserName:%15v | Email:%15v}", u.UserID, u.UserName, u.Email)
 }
 
@@ -122,6 +130,11 @@ func readAllUsers() ([]User, error) {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	users, err := readAllUsers()
 
 	if err != nil {
